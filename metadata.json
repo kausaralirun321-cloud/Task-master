@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Task Countdown Notifier",
+  "description": "An application to manage daily and future tasks with countdown timers and audible notifications. Users can add tasks with specific due dates and times, track remaining time, and receive alerts. The app also supports subtasks and marks overdue items, helping users stay aware of their schedule and deadlines.",
+  "requestFramePermissions": []
+}
