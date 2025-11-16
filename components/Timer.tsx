@@ -32,7 +32,7 @@ const Timer: React.FC<TimerProps> = ({ dueDate, isCompleted, now }) => {
     const diff = due.getTime() - now.getTime();
 
     if (diff > 0) {
-      return { text: formatDuration(diff), color: 'text-yellow-400' };
+      return { text: formatDuration(diff), color: 'text-green-400' };
     } else {
       return { text: `Late by ${formatDuration(-diff)}`, color: 'text-red-400' };
     }

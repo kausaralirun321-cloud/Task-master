@@ -6,4 +6,5 @@ export interface Task {
   isCompleted: boolean;
   subtasks: Task[];
   notified: boolean;
+  notificationsEnabled: boolean;
 }

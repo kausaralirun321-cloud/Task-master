@@ -8,11 +8,13 @@ interface TaskListProps {
   onToggleComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onAddTask: (text: string, dueDate: string, parentId: string) => void;
+  onToggleNotifications: (id: string) => void;
+  onEditTask: (id: string, text: string, dueDate: string) => void;
   now: Date;
   level?: number;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleComplete, onDelete, onAddTask, now, level = 0 }) => {
+const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleComplete, onDelete, onAddTask, onToggleNotifications, onEditTask, now, level = 0 }) => {
   if (tasks.length === 0 && level === 0) {
     return (
         <div className="text-center py-10 px-4 bg-secondary rounded-lg shadow-inner">
@@ -31,6 +33,8 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleComplete, onDelete, 
           onToggleComplete={onToggleComplete}
           onDelete={onDelete}
           onAddTask={onAddTask}
+          onToggleNotifications={onToggleNotifications}
+          onEditTask={onEditTask}
           now={now}
           level={level}
         />
