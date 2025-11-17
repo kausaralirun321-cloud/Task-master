@@ -3,24 +3,56 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Task Countdown Notifier</title>
+    <title>TaskMaster | Countdown Notifier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
             colors: {
               'primary': '#1a1a2e',
               'secondary': '#16213e',
               'accent': '#0f3460',
               'highlight': '#e94560',
-              'text-main': '#dcdcdc',
+              'text-main': '#e0e0e0',
               'text-secondary': '#a0a0a0',
+              'success': '#34d399',
             },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out',
+              'pop-in': 'popIn 0.3s ease-out forwards',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: 0, transform: 'translateY(-10px)' },
+                '100%': { opacity: 1, transform: 'translateY(0)' },
+              },
+              popIn: {
+                '0%': { transform: 'scale(0.8)', opacity: '0'},
+                '80%': { transform: 'scale(1.1)'},
+                '100%': { transform: 'scale(1)', opacity: '1'},
+              }
+            }
           }
         }
       }
     </script>
+    <style>
+      body {
+        background-image: 
+          linear-gradient(rgba(26, 26, 46, 0.88), rgba(22, 33, 62, 0.92)),
+          url('https://images.unsplash.com/photo-1534239698-35b47a192591?q=80&w=2574&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
@@ -30,19 +62,8 @@
   }
 }
 </script>
-<style>
-  input[type="date"]::-webkit-calendar-picker-indicator,
-  input[type="time"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    cursor: pointer;
-  }
-  input[type="date"],
-  input[type="time"] {
-    color-scheme: dark;
-  }
-</style>
 </head>
-  <body class="bg-primary text-text-main">
+  <body class="text-text-main">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

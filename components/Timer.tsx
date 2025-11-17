@@ -1,8 +1,8 @@
-
 import React, { useMemo } from 'react';
 
 interface TimerProps {
-  dueDate: string;
+  startDate: string;
+  endDate: string;
   isCompleted: boolean;
   now: Date;
 }
@@ -22,24 +22,30 @@ const formatDuration = (ms: number) => {
   return parts.join(' ') || '0s';
 };
 
-const Timer: React.FC<TimerProps> = ({ dueDate, isCompleted, now }) => {
+const Timer: React.FC<TimerProps> = ({ startDate, endDate, isCompleted, now }) => {
   const display = useMemo(() => {
     if (isCompleted) {
-      return { text: 'Completed', color: 'text-green-400' };
+      return { text: 'Completed', color: 'bg-green-500/20 text-green-300' };
     }
 
-    const due = new Date(dueDate);
-    const diff = due.getTime() - now.getTime();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const nowTime = now.getTime();
 
-    if (diff > 0) {
-      return { text: formatDuration(diff), color: 'text-green-400' };
+    if (nowTime < start.getTime()) {
+      const diff = start.getTime() - nowTime;
+      return { text: `Starts in ${formatDuration(diff)}`, color: 'bg-blue-500/20 text-blue-300' };
+    } else if (nowTime <= end.getTime()) {
+      const diff = end.getTime() - nowTime;
+      return { text: `Ends in ${formatDuration(diff)}`, color: 'bg-yellow-500/20 text-yellow-300' };
     } else {
-      return { text: `Late by ${formatDuration(-diff)}`, color: 'text-red-400' };
+      const diff = nowTime - end.getTime();
+      return { text: `Late by ${formatDuration(diff)}`, color: 'bg-red-500/20 text-red-300' };
     }
-  }, [dueDate, isCompleted, now]);
+  }, [startDate, endDate, isCompleted, now]);
 
   return (
-    <div className={`text-sm font-mono whitespace-nowrap ${display.color}`}>
+    <div className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${display.color}`}>
       {display.text}
     </div>
   );

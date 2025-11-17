@@ -2,9 +2,9 @@
 export interface Task {
   id: string;
   text: string;
-  dueDate: string; // ISO string for easy serialization
+  startDate: string; // ISO string
+  endDate: string; // ISO string
   isCompleted: boolean;
   subtasks: Task[];
   notified: boolean;
-  notificationsEnabled: boolean;
 }

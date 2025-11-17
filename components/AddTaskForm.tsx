@@ -1,36 +1,49 @@
-
 import React, { useState } from 'react';
 import { PlusIcon } from './icons';
 
 interface AddTaskFormProps {
-  onAddTask: (text: string, dueDate: string) => void;
+  onAddTask: (text: string, startDate: string, endDate: string) => void;
   parentId?: string | null;
 }
 
 const AddTaskForm: React.FC<AddTaskFormProps> = ({ onAddTask, parentId = null }) => {
   const [text, setText] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [endTime, setEndTime] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!text.trim() || !date || !time) {
+    if (!text.trim() || !startDate || !startTime || !endDate || !endTime) {
         alert('Please fill out all fields.');
         return;
     };
     
-    const dueDate = new Date(`${date}T${time}`);
-    onAddTask(text, dueDate.toISOString());
+    const startDateTime = new Date(`${startDate}T${startTime}`);
+    const endDateTime = new Date(`${endDate}T${endTime}`);
+
+    if (startDateTime >= endDateTime) {
+      alert('End date and time must be after the start date and time.');
+      return;
+    }
+
+    onAddTask(text, startDateTime.toISOString(), endDateTime.toISOString());
     setText('');
-    setDate('');
-    setTime('');
+    setStartDate('');
+    setStartTime('');
+    setEndDate('');
+    setEndTime('');
   };
+  
+  const isSubtask = parentId !== null;
 
-  const formClasses = parentId 
+  const formClasses = isSubtask 
     ? "flex flex-col sm:flex-row gap-2 mt-2" 
-    : "flex flex-col md:flex-row gap-3 p-4 bg-secondary rounded-lg shadow-lg mb-6";
+    : "flex flex-col md:flex-row gap-3 items-center";
 
-  const inputClasses = "bg-primary border border-accent focus:border-highlight focus:ring-highlight focus:ring-1 rounded-md px-3 py-2 text-text-main outline-none transition-colors";
+  const inputClasses = "bg-primary/50 border border-accent focus:border-highlight focus:ring-highlight focus:ring-1 rounded-md px-3 py-2 text-text-main outline-none transition-colors w-full";
+  const dateInputWrapper = `flex gap-2 items-center p-2 rounded-lg bg-primary/30 border border-transparent ${isSubtask ? 'w-full sm:w-auto' : ''}`;
 
   return (
     <form onSubmit={handleSubmit} className={formClasses}>
@@ -38,28 +51,56 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ onAddTask, parentId = null })
         type="text"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={parentId ? "New subtask..." : "Add a new task..."}
+        placeholder={isSubtask ? "Define subtask..." : "What's your task?"}
         className={`${inputClasses} flex-grow`}
+        aria-label="Task description"
       />
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        className={`${inputClasses} w-full sm:w-auto`}
-        min={new Date().toISOString().split('T')[0]}
-      />
-      <input
-        type="time"
-        value={time}
-        onChange={(e) => setTime(e.target.value)}
-        className={`${inputClasses} w-full sm:w-auto`}
-      />
+      <div className={`flex flex-col sm:flex-row gap-2 ${isSubtask ? 'w-full' : ''}`}>
+        <div className={dateInputWrapper}>
+          <label htmlFor={parentId ? `start-date-${parentId}` : 'start-date'} className="text-sm text-text-secondary font-medium">Start:</label>
+          <input
+            id={parentId ? `start-date-${parentId}` : 'start-date'}
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="bg-transparent text-text-main outline-none w-auto"
+            min={new Date().toISOString().split('T')[0]}
+            aria-label="Start Date"
+          />
+          <input
+            type="time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            className="bg-transparent text-text-main outline-none w-auto"
+            aria-label="Start Time"
+          />
+        </div>
+        <div className={dateInputWrapper}>
+          <label htmlFor={parentId ? `end-date-${parentId}` : 'end-date'} className="text-sm text-text-secondary font-medium">End:</label>
+          <input
+            id={parentId ? `end-date-${parentId}` : 'end-date'}
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="bg-transparent text-text-main outline-none w-auto"
+            min={startDate || new Date().toISOString().split('T')[0]}
+            aria-label="End Date"
+          />
+          <input
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            className="bg-transparent text-text-main outline-none w-auto"
+            aria-label="End Time"
+          />
+        </div>
+      </div>
       <button
         type="submit"
-        className="flex items-center justify-center gap-2 bg-highlight hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md transition-colors duration-300"
+        className="flex items-center justify-center gap-2 bg-gradient-to-r from-highlight to-pink-500 hover:from-pink-500 hover:to-highlight text-white font-bold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-pink-500/50 transition-all duration-300 transform hover:scale-105"
       >
         <PlusIcon />
-        <span>{parentId ? "Add Subtask" : "Add Task"}</span>
+        {!isSubtask && <span>Add Task</span>}
       </button>
     </form>
   );
