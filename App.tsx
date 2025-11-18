@@ -200,8 +200,8 @@ const App: React.FC = () => {
             <p className="text-text-secondary mt-2 text-lg">Turn your to-dos into ta-das!</p>
         </header>
         
-        <div className="bg-secondary/30 backdrop-blur-sm border border-accent/50 rounded-xl p-4 sm:p-6 shadow-2xl mb-8 animate-fade-in [animation-delay:0.2s]">
-          <div className="flex justify-between items-center mb-4">
+        <div className="bg-secondary/60 backdrop-blur-lg border border-highlight/30 rounded-xl p-6 sm:p-8 shadow-2xl shadow-highlight/10 mb-12 animate-fade-in [animation-delay:0.2s]">
+          <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-text-main">Add Your Next Goal</h2>
           </div>
           <AddTaskForm onAddTask={addTask} />
