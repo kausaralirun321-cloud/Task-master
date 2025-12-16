@@ -7,4 +7,5 @@ export interface Task {
   isCompleted: boolean;
   subtasks: Task[];
   notified: boolean;
+  startNotified?: boolean;
 }

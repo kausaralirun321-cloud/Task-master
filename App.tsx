@@ -3,12 +3,16 @@ import { Task } from './types';
 import { usePersistentState } from './hooks/usePersistentState';
 import TaskList from './components/TaskList';
 import AddTaskForm from './components/AddTaskForm';
+import { BellIcon, BellAlertIcon } from './components/icons';
 
-const BELL_SOUND = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAA/4QxAAEAAAAAAAY8AANHQVRTVSBGUklORyBGT1IgVEFTSyBDT01QTEVUSU9OAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//tAwA/68Q0gAAAABkI0IAABuAAAAAANAQAAAAAAAAAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0gBEkAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+const BELL_SOUND = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAA/4QxAAEAAAAAAAY8AANHQVRTVSBGUklORyBGT1IgVEFTSyBDT01QTEVUSU9OAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//tAwA/68Q0gAAAABkI0IAABuAAAAAANAQAAAAAAAAAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0gBEkAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tAwA/98Q0pBEYAAQAB68AAAAAANAQAAAAAAAQAAAEAAAABVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
 
 const App: React.FC = () => {
   const [tasks, setTasks] = usePersistentState<Task[]>('tasks', []);
   const [now, setNow] = useState(new Date());
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
+    'Notification' in window ? Notification.permission : 'denied'
+  );
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -16,18 +20,62 @@ const App: React.FC = () => {
     return () => clearInterval(timerId);
   }, []);
 
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      alert("This browser does not support desktop notifications");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+    if (permission === "granted") {
+        new Notification("Notifications Enabled", { body: "You will now be notified when tasks start and end." });
+    }
+  };
+
   const handleNotifications = useCallback(() => {
     let changed = false;
     const checkAndNotify = (tasks: Task[]): Task[] => {
       return tasks.map(task => {
-        if (!task.isCompleted && !task.notified && new Date(task.endDate) <= now) {
+        let currentTask = task;
+        let hasUpdate = false;
+        const nowTime = now.getTime();
+        const startTime = new Date(currentTask.startDate).getTime();
+        const endTime = new Date(currentTask.endDate).getTime();
+
+        // Check Start Notification
+        if (!currentTask.isCompleted && !currentTask.startNotified && startTime <= nowTime) {
+            changed = true;
+            hasUpdate = true;
+            currentTask = { ...currentTask, startNotified: true };
+            if (Notification.permission === "granted") {
+                new Notification(`🚀 Task Started: ${currentTask.text}`, {
+                    body: `It's time to start working on this task!`,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png'
+                });
+            }
+        }
+
+        // Check End Notification
+        if (!currentTask.isCompleted && !currentTask.notified && endTime <= nowTime) {
           changed = true;
-          return { ...task, notified: true, subtasks: checkAndNotify(task.subtasks) };
+          hasUpdate = true;
+          currentTask = { ...currentTask, notified: true };
+          if (Notification.permission === "granted") {
+             new Notification(`⏰ Task Due: ${currentTask.text}`, {
+                 body: `The deadline for this task has arrived.`,
+             });
+          }
         }
-        if (task.subtasks.length > 0) {
-            return { ...task, subtasks: checkAndNotify(task.subtasks) };
+
+        // Check Subtasks
+        if (currentTask.subtasks.length > 0) {
+            const updatedSubtasks = checkAndNotify(currentTask.subtasks);
+            // Since map returns new array, we just assign it. 
+            // Ideally we check for changes inside subtasks too, but `changed` flag handles the save.
+            currentTask = { ...currentTask, subtasks: updatedSubtasks };
         }
-        return task;
+        
+        return currentTask;
       });
     };
 
@@ -53,6 +101,7 @@ const App: React.FC = () => {
       isCompleted: false,
       subtasks: [],
       notified: false,
+      startNotified: false,
     };
 
     if (parentId === null) {
@@ -78,7 +127,15 @@ const App: React.FC = () => {
     const updateRecursively = (tasks: Task[]): Task[] => {
         return tasks.map(task => {
             if (task.id === taskId) {
-                return { ...task, text: newText, startDate: newStartDate, endDate: newEndDate };
+                return { 
+                  ...task, 
+                  text: newText, 
+                  startDate: newStartDate, 
+                  endDate: newEndDate,
+                  // Reset notifications if dates change to future
+                  notified: new Date(newEndDate) > now ? false : task.notified,
+                  startNotified: new Date(newStartDate) > now ? false : task.startNotified
+                };
             }
             if (task.subtasks.length > 0) {
                 return { ...task, subtasks: updateRecursively(task.subtasks) };
@@ -87,7 +144,7 @@ const App: React.FC = () => {
         });
     };
     setTasks(prevTasks => updateRecursively(prevTasks));
-  }, [setTasks]);
+  }, [setTasks, now]);
 
   const toggleComplete = useCallback((taskId: string) => {
     // Helper to recursively mark all descendants as completed
@@ -193,7 +250,23 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent font-sans">
       <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-        <header className="text-center mb-8 animate-fade-in">
+        <header className="relative text-center mb-8 animate-fade-in">
+            {notificationPermission !== 'granted' && (
+              <button 
+                onClick={requestNotificationPermission}
+                className="absolute right-0 top-0 flex items-center gap-2 text-sm bg-secondary/80 hover:bg-highlight/20 text-text-secondary hover:text-highlight px-3 py-1.5 rounded-full transition-all"
+                title="Enable Desktop Notifications"
+              >
+                <BellAlertIcon />
+                <span className="hidden sm:inline">Enable Alerts</span>
+              </button>
+            )}
+             {notificationPermission === 'granted' && (
+              <div className="absolute right-0 top-0 flex items-center gap-2 text-sm text-success/70 px-3 py-1.5" title="Notifications Active">
+                <BellIcon />
+              </div>
+            )}
+
             <h1 className="text-5xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-highlight to-pink-500 tracking-tight">
               TaskMaster
             </h1>
